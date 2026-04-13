@@ -1,0 +1,92 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-hello_world}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-hello_world}"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  temporal:
+    image: temporalio/admin-tools:latest
+    command: ["temporal", "server", "start-dev", "--ip", "0.0.0.0", "--namespace", "default"]
+    ports:
+      - "7233:7233"
+      - "8233:8233"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 7233 || exit 1"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      PORT: "3000"
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-hello_world}
+      TEMPORAL_ADDRESS: temporal:7233
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/api/src:/app/apps/api/src
+      - ./apps/api/tsconfig.json:/app/apps/api/tsconfig.json
+      - ./packages/shared/src:/app/packages/shared/src
+      - ./tsconfig.base.json:/app/tsconfig.base.json
+      - api_node_modules:/app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      temporal:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-hello_world}
+      TEMPORAL_ADDRESS: temporal:7233
+    volumes:
+      - ./apps/worker/src:/app/apps/worker/src
+      - ./apps/worker/tsconfig.json:/app/apps/worker/tsconfig.json
+      - ./packages/shared/src:/app/packages/shared/src
+      - ./tsconfig.base.json:/app/tsconfig.base.json
+      - worker_node_modules:/app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      temporal:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./apps/web/src:/app/apps/web/src
+      - ./apps/web/index.html:/app/apps/web/index.html
+      - ./apps/web/tsconfig.json:/app/apps/web/tsconfig.json
+      - ./apps/web/vite.config.ts:/app/apps/web/vite.config.ts
+      - ./tsconfig.base.json:/app/tsconfig.base.json
+      - web_node_modules:/app/node_modules
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  api_node_modules:
+  worker_node_modules:
+  web_node_modules:

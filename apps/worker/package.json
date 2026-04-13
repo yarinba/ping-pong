@@ -1,0 +1,26 @@
+{
+  "name": "@ping-pong/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ping-pong/shared": "workspace:*",
+    "@temporalio/activity": "^1.10.3",
+    "@temporalio/worker": "^1.10.3",
+    "@temporalio/workflow": "^1.10.3",
+    "pg": "^8.12.0"
+  },
+  "devDependencies": {
+    "@temporalio/testing": "^1.10.3",
+    "@types/node": "^22.5.0",
+    "@types/pg": "^8.11.6",
+    "tsx": "^4.19.0",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
+  }
+}

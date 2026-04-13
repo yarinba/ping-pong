@@ -1,0 +1,15 @@
+{
+  "name": "ping-pong",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@9.12.0",
+  "scripts": {
+    "dev:api": "pnpm --filter @ping-pong/api dev",
+    "dev:worker": "pnpm --filter @ping-pong/worker dev",
+    "dev:web": "pnpm --filter @ping-pong/web dev",
+    "test": "pnpm -r test"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}
