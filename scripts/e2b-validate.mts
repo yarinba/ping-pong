@@ -127,20 +127,14 @@ async function main() {
       depth: 1,
     })
 
-    // Start Docker daemon
-    await sandbox.commands.run('dockerd > /tmp/dockerd.log 2>&1 &')
-    await sandbox.commands.run(
-      'timeout 30 sh -c "until docker info > /dev/null 2>&1; do sleep 1; done"',
-      { timeoutMs: 35_000 }
-    )
+    // Docker daemon is pre-running in the template; user needs sudo to access it
+    // Start stack (builds api/worker/web images on first run)
+    await sandbox.commands.run('cd /home/user/app && sudo docker compose up -d', { timeoutMs: 600_000 })
 
-    // Start stack
-    await sandbox.commands.run('cd /home/user/app && docker compose up -d', { timeoutMs: 600_000 })
-
-    // Wait for all healthchecks to pass (max 120s)
+    // Wait for postgres and temporal healthchecks to pass (max 180s)
     await sandbox.commands.run(
-      `timeout 120 sh -c 'until [ "$(cd /home/user/app && docker compose ps --format json | grep -c \\"healthy\\")" -ge 2 ]; do sleep 2; done'`,
-      { timeoutMs: 130_000 }
+      `timeout 180 sh -c 'until [ "$(cd /home/user/app && sudo docker compose ps --format json | grep -c \\"healthy\\")" -ge 2 ]; do sleep 2; done'`,
+      { timeoutMs: 200_000 }
     )
 
     // Run validator Claude
