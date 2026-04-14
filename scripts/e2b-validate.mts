@@ -118,9 +118,9 @@ async function main() {
   })
 
   try {
-    // Clone repo
+    // Clone repo into user-owned directory to avoid safe.directory issues
     await sandbox.git.clone(repo, {
-      path: '/code',
+      path: '/home/user/app',
       branch,
       username: 'x-access-token',
       password: GITHUB_TOKEN,
@@ -135,18 +135,18 @@ async function main() {
     )
 
     // Start stack
-    await sandbox.commands.run('cd /code && docker compose up -d', { timeoutMs: 600_000 })
+    await sandbox.commands.run('cd /home/user/app && docker compose up -d', { timeoutMs: 600_000 })
 
     // Wait for all healthchecks to pass (max 120s)
     await sandbox.commands.run(
-      `timeout 120 sh -c 'until [ "$(cd /code && docker compose ps --format json | grep -c \\"healthy\\")" -ge 2 ]; do sleep 2; done'`,
+      `timeout 120 sh -c 'until [ "$(cd /home/user/app && docker compose ps --format json | grep -c \\"healthy\\")" -ge 2 ]; do sleep 2; done'`,
       { timeoutMs: 130_000 }
     )
 
     // Run validator Claude
     const fullPrompt = buildPrompt(prompt)
     const result = await sandbox.commands.run(
-      `cd /code && claude --dangerously-skip-permissions --output-format json -p ${JSON.stringify(fullPrompt)}`,
+      `cd /home/user/app && claude --dangerously-skip-permissions --output-format json -p ${JSON.stringify(fullPrompt)}`,
       { timeoutMs: 300_000 }
     )
 
