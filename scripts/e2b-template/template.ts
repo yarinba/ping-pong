@@ -8,9 +8,6 @@ export const template = Template()
     'postgresql-client',
     'curl',
   ])
-  .runCommands([
-    // Install Temporal CLI
-    'curl -sSf https://temporal.download/cli.sh | sh -s -- --install-dir /usr/local/bin',
-  ])
+  .runCmd('curl -sSf https://temporal.download/cli.sh | sh -s -- --install-dir /usr/local/bin')
   .npmInstall(['playwright'], { g: true })
-  .runCommands(['playwright install chromium --with-deps'])
+  .runCmd('playwright install chromium --with-deps')
