@@ -43,7 +43,7 @@ For each check below: run it, record pass/fail and the exact result observed.
 
 ${checks}
 
-After all checks, output your final report as a JSON code block exactly like this:
+IMPORTANT: Your FINAL output MUST be ONLY the JSON code block below — no prose before or after it.
 \`\`\`json
 {
   "passed": <true if ALL checks passed, false otherwise>,
