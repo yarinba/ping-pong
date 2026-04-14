@@ -135,7 +135,7 @@ async function main() {
     )
 
     // Start stack
-    await sandbox.commands.run('cd /app && docker compose up -d', { timeoutMs: 30_000 })
+    await sandbox.commands.run('cd /app && docker compose up -d', { timeoutMs: 600_000 })
 
     // Wait for all healthchecks to pass (max 120s)
     await sandbox.commands.run(
