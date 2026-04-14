@@ -1,5 +1,5 @@
 import { Template, defaultBuildLogger } from 'e2b'
-import { template } from './template.js'
+import { template } from './template.mjs'
 
 await Template.build(template, 'ping-pong-validator', {
   cpuCount: 4,
