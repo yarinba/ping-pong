@@ -43,7 +43,7 @@ For each check below: run it, record pass/fail and the exact result observed.
 
 ${checks}
 
-After all checks, output your final report as a JSON code block exactly like this:
+IMPORTANT: Your FINAL output MUST be ONLY the JSON code block below — no prose before or after it.
 \`\`\`json
 {
   "passed": <true if ALL checks passed, false otherwise>,
@@ -118,35 +118,29 @@ async function main() {
   })
 
   try {
-    // Clone repo
+    // Clone repo into user-owned directory to avoid safe.directory issues
     await sandbox.git.clone(repo, {
-      path: '/app',
+      path: '/home/user/app',
       branch,
       username: 'x-access-token',
       password: GITHUB_TOKEN,
       depth: 1,
     })
 
-    // Start Docker daemon
-    await sandbox.commands.run('dockerd > /tmp/dockerd.log 2>&1 &')
-    await sandbox.commands.run(
-      'timeout 30 sh -c "until docker info > /dev/null 2>&1; do sleep 1; done"',
-      { timeoutMs: 35_000 }
-    )
+    // Docker daemon is pre-running in the template; user needs sudo to access it
+    // Start stack (builds api/worker/web images on first run)
+    await sandbox.commands.run('cd /home/user/app && sudo docker compose up -d', { timeoutMs: 600_000 })
 
-    // Start stack
-    await sandbox.commands.run('cd /app && docker compose up -d', { timeoutMs: 600_000 })
-
-    // Wait for all healthchecks to pass (max 120s)
+    // Wait for postgres and temporal healthchecks to pass (max 180s)
     await sandbox.commands.run(
-      `timeout 120 sh -c 'until [ "$(cd /app && docker compose ps --format json | grep -c \\"healthy\\")" -ge 2 ]; do sleep 2; done'`,
-      { timeoutMs: 130_000 }
+      `timeout 180 sh -c 'until [ "$(cd /home/user/app && sudo docker compose ps --format json | grep -c \\"healthy\\")" -ge 2 ]; do sleep 2; done'`,
+      { timeoutMs: 200_000 }
     )
 
     // Run validator Claude
     const fullPrompt = buildPrompt(prompt)
     const result = await sandbox.commands.run(
-      `cd /app && claude --dangerously-skip-permissions --output-format json -p ${JSON.stringify(fullPrompt)}`,
+      `cd /home/user/app && claude --dangerously-skip-permissions --output-format json -p ${JSON.stringify(fullPrompt)}`,
       { timeoutMs: 300_000 }
     )
 
