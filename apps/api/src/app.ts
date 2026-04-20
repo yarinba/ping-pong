@@ -12,7 +12,7 @@ export interface Deps {
 export function buildApp(deps: Deps): FastifyInstance {
   const app = Fastify({ logger: true });
 
-  app.get('/healthz', async () => ({ ok: true }));
+  app.get('/healthz', async () => ({ status: 'ok' }));
 
   app.post('/pings', async (_req, reply) => {
     const id = randomUUID();

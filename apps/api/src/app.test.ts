@@ -79,11 +79,12 @@ describe('GET /messages', () => {
 });
 
 describe('GET /healthz', () => {
-  it('returns 200', async () => {
+  it('returns 200 with status ok', async () => {
     const { pool, temporal } = makeDeps();
     const app = buildApp({ pool, temporal });
     const res = await app.inject({ method: 'GET', url: '/healthz' });
     expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ status: 'ok' });
     await app.close();
   });
 });
