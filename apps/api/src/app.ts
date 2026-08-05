@@ -14,6 +14,8 @@ export function buildApp(deps: Deps): FastifyInstance {
 
   app.get('/healthz', async () => ({ ok: true }));
 
+  app.get('/validate', async () => ({ status: 'ok' }));
+
   app.post('/pings', async (_req, reply) => {
     const id = randomUUID();
     const result = await deps.pool.query(
